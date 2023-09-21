@@ -199,7 +199,7 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
                             />
                             <field
                                 name="analysis_rule_info_ids"
-                                widget="one2many_list"
+                                widget="one2many"
                                 colspan="4"
                                 attrs="{'invisible': [('analysis_rule_info_ids', '=', [])]}"
                             >

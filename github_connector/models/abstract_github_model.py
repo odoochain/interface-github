@@ -130,7 +130,7 @@ class AbstractGithubModel(models.AbstractModel):
 
         :Example:
 
-        >>> self.env['github_organization'].get_from_id_or_create(
+        # >>> self.env['github_organization'].get_from_id_or_create(
             data={'id': 7600578, 'url': 'https://api.github.com/orgs/OCA'})
         """
         extra_data = extra_data or {}
@@ -190,8 +190,8 @@ class AbstractGithubModel(models.AbstractModel):
 
         :Example:
 
-        >>> self.env['github_organization'].create_from_name('OCA')
-        >>> self.env['github_repository'].create_from_name('OCA/web')
+        # >>> self.env['github_organization'].create_from_name('OCA')
+        # >>> self.env['github_repository'].create_from_name('OCA/web')
         """
         gh_api = self.get_github_connector()
         p_name = name.rstrip("/").lstrip(

@@ -21,7 +21,7 @@ except ImportError:
     _logger.debug("Cannot import 'git' python library.")
 
 
-class GithubRepository(models.Model):
+class GithubRepositoryBranch(models.Model):
     _name = "github.repository.branch"
     _inherit = ["abstract.github.model"]
     _order = "repository_id, sequence_serie"
@@ -108,7 +108,7 @@ class GithubRepository(models.Model):
     )
 
     # Init Section
-    def __init__(self, pool, cr):
+    def __init__(self, env, pool, cr):
         source_path = self._get_source_path()
         if source_path and not os.path.exists(source_path):
             try:
@@ -124,7 +124,7 @@ class GithubRepository(models.Model):
                 )
         if source_path and source_path not in addons.__path__:
             addons.__path__.append(source_path)
-        super().__init__(pool, cr)
+        super().__init__(env, ids=pool, prefetch_ids=cr)
 
     def _get_source_path(self):
         return tools.config.get("source_code_local_path", "") or os.environ.get(
