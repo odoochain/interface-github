@@ -24,7 +24,7 @@ except ImportError:
 
 class GithubRepositoryBranch(models.Model):
     _name = "github.repository.branch"
-    _inherit = ["abstract.github.model"]
+    _inherit = ["abstract.github.model"]  # "server.env.mixin"
     _order = "repository_id, sequence_serie"
     _description = "Github Repository Branch"
 
@@ -108,8 +108,8 @@ class GithubRepositoryBranch(models.Model):
         inverse_name="repository_branch_id",
     )
 
-    # Init Section
-    def __init__(self, env, pool, cr):
+    def __init__(self, env, ids=(), prefetch_ids=()):
+        super().__init__(env, ids=ids, prefetch_ids=prefetch_ids)
         source_path = self._get_source_path()
         if source_path and not os.path.exists(source_path):
             try:
@@ -125,7 +125,12 @@ class GithubRepositoryBranch(models.Model):
                 )
         if source_path and source_path not in addons.__path__:
             addons.__path__.append(source_path)
-        super().__init__(env, ids=pool, prefetch_ids=cr)
+
+
+
+
+    # Init Section https://github.com/OCA/server-ux/blob/14.0/base_technical_features/models/res_users.py
+    #
 
     def _get_source_path(self):
         return tools.config.get("source_code_local_path", "") or os.environ.get(
