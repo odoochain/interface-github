@@ -82,6 +82,7 @@ class GithubRepositoryBranch(models.Model):
     last_download_date = fields.Datetime()
 
     last_analyze_date = fields.Datetime()
+    last_commit = fields.Char(readonly=True)
 
     coverage_url = fields.Char(
         string="Coverage URL", store=True, compute="_compute_coverage_url"
@@ -165,6 +166,12 @@ class GithubRepositoryBranch(models.Model):
             branch = self.create({"name": name, "repository_id": repository_id})
         return branch
 
+    def _command_git_last_commit(self):
+        return check_output(
+            ["git", "log", "-n", "1", "origin/%s" % (self.name), "--pretty=format:%H"],
+            cwd=self.local_path,
+        ).decode("utf-8")
+
     def _download_code(self):
         for branch in self:
             repository = branch.repository_id
@@ -188,19 +195,34 @@ class GithubRepositoryBranch(models.Model):
                     branch.local_path,
                 )
                 os.system(command)
+                # extra command to get last commit
+                last_commit = branch._command_git_last_commit()
                 branch.write(
-                    {"last_download_date": datetime.today(), "state": "to_analyze"}
+                    {
+                        "last_download_date": datetime.today(),
+                        "last_commit": last_commit,
+                        "state": "to_analyze",
+                    }
                 )
             else:
-                # Update repository
+                # Update repository: git pull + get last commit
                 _logger.info("Pulling existing repository %s ..." % branch.local_path)
                 try:
-                    res = check_output(
+                    check_output(
                         ["git", "pull", "origin", branch.name], cwd=branch.local_path
                     )
-                    vals = {"last_download_date": datetime.today()}
-                    if b"up to date" not in res:
-                        vals["state"] = "to_analyze"
+                    # extra command to get last commit
+                    last_commit = branch._command_git_last_commit()
+                    vals = {
+                        "last_download_date": datetime.today(),
+                        "last_commit": last_commit,
+                    }
+                    if (
+                        branch.state == "to_download"
+                        or not branch.last_commit
+                        or branch.last_commit != last_commit
+                    ):
+                        vals.update(state="to_analyze")
                     branch.write(vals)
                 except Exception:
                     # Trying to clean the local folder
