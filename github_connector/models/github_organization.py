@@ -3,6 +3,7 @@
 # Copyright 2021 Tecnativa - João Marques
 # @author: Sylvain LE GAL (https://twitter.com/legalsylvain)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import os
 
 from github.GithubException import GithubException
 

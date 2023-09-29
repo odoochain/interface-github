@@ -322,18 +322,23 @@ class OdooModuleVersion(models.Model):
 
     @api.depends("external_dependencies")
     def _compute_lib(self):
+        global my_eval
         lib_python_obj = self.env["odoo.lib.python"]
         lib_bin_obj = self.env["odoo.lib.bin"]
         for version in self:
             python_libs = []
             bin_libs = []
-            my_eval = {}
+            # my_eval = {}
             if version.external_dependencies:
-                my_eval = safe_eval(version.external_dependencies)
-            for python_name in my_eval.get("python", []):
-                python_libs.append(lib_python_obj.create_if_not_exist(python_name))
-            for bin_name in my_eval.get("bin", []):
-                bin_libs.append(lib_bin_obj.create_if_not_exist(bin_name))
+                my_eval = tuple(safe_eval(version.external_dependencies))
+            print(my_eval)
+
+            for python_names in my_eval:
+                # print(str(python_names))
+                for python_name in python_names.get("python", []):
+                    python_libs.append(lib_python_obj.create_if_not_exist(python_name))
+                for bin_name in python_names.get("bin", []):
+                    bin_libs.append(lib_bin_obj.create_if_not_exist(bin_name))
 
             version.lib_python_ids = [x.id for x in python_libs]
             version.lib_python_ids_description = ", ".join(
