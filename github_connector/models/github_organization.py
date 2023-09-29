@@ -7,7 +7,8 @@
 from github.GithubException import GithubException
 
 from odoo import _, api, exceptions, fields, models
-
+os.environ["HTTP_PROXY"] = "http://127.0.0.1:10809"
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:10809"
 
 class GithubOrganization(models.Model):
     _name = "github.organization"

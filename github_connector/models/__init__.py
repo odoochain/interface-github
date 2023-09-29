@@ -1,3 +1,4 @@
+from . import _urlopen
 from . import abstract_github_model
 
 from . import res_partner

@@ -6,18 +6,32 @@
 import base64
 import logging
 from datetime import datetime
-from urllib.request import urlopen
-
-from github import Github
+import time
+from urllib.request import urlopen as _urlopen
+from github import Github,Auth
 from github.GithubException import UnknownObjectException
 
 from odoo import _, api, fields, models, tools
+from odoo.addons.github_connector.models._urlopen import urlopen
 from odoo.exceptions import UserError
+import os
+# https://github.com/xxtg666/XTBot-Core/blob/main/plugins/xtbotaidraw/gh_utils.py
+
+os.environ["HTTP_PROXY"] = "http://127.0.0.1:10809"
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:10809"
 
 _logger = logging.getLogger(__name__)
 
 _GITHUB_URL = "https://github.com/"
 
+# to account for the difference between TIMESTAMP of the index' contents
+#  and the file-'mtime'
+TIMESTAMP_TOLERANCE = 5
+
+# proxies = {
+# 'http':'http://127.0.0.1:10809',
+# 'https': 'http://127.0.0.1:10809',
+# }
 
 class AbstractGithubModel(models.AbstractModel):
     """
@@ -249,16 +263,20 @@ class AbstractGithubModel(models.AbstractModel):
         if child_update:
             self.full_update()
 
+
+
     def get_base64_image_from_github(self, url):
         max_try = int(
             self.sudo().env["ir.config_parameter"].get_param("github.max_try")
         )
         for _i in range(max_try):
             try:
-                stream = urlopen(url, timeout=10).read()
+                stream = _urlopen(url, timeout=10).read()
                 break
             except Exception as err:
-                _logger.warning("URL Call Error. %s" % (err.__str__()))
+                _logger.warning(
+                    _("URL %s  Calls Error. %s "),
+                    url, err.__str__())
         else:
             raise UserError(_("Maximum attempts reached."))
         return base64.standard_b64encode(stream)
@@ -301,7 +319,7 @@ class AbstractGithubModel(models.AbstractModel):
                     " or as the 'github.access_token' configuration parameter."
                 )
             )
-        return Github(token)
+        return Github(auth=Auth.Token(token))
 
     def create_in_github(self):
         """Create an object in Github through the API
@@ -319,3 +337,25 @@ class AbstractGithubModel(models.AbstractModel):
             "res_model": self._name,
             "res_id": self.id,
         }
+
+class GITHUB_UTILS:
+    def __init__(self):
+        self.gh = Github(auth=Auth.Token("")) # 非公开内容
+        self.repo = self.gh.get_repo("") # 非公开内容
+    def createNewTask(self, user_id: str, model: str, prompt: str) -> int:
+        prompt_short = prompt[0:20]
+        prompt_no_endl = prompt.replace("\n",r"\n")
+        t = int(time.time())
+        issue_title = f"[AIDraw] {user_id}: {prompt_short}{'' if prompt_short == prompt else '...'}"
+        issue_body = f"{t}\n{user_id}\n{model}\n{prompt_no_endl}"
+        return self.repo.create_issue(title=issue_title, body=issue_body).number
+    def endTask(self, issue_number: int, answer: str, image: bool = False) -> int:
+        issue = self.repo.get_issue(issue_number)
+        t = int(time.time())
+        if image:
+            issue.create_comment(f"{t}\n![]({answer})")
+        else:
+            answer_no_endl = answer.replace("\n", r"\n")
+            issue.create_comment(f"{t}\n{answer_no_endl}")
+        issue.edit(state="closed")
+        return issue_number

@@ -1,12 +1,20 @@
 # Copyright (C) 2016-Today: Odoo Community Association (OCA)
 # @author: Sylvain LE GAL (https://twitter.com/legalsylvain)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-
+import os
 from collections import defaultdict
 
 import requests
 
 from odoo import api, fields, models
+
+proxies = {
+    'http': 'http://127.0.0.1:10809',
+    'https': 'http://127.0.0.1:10809',
+}
+
+os.environ["HTTP_PROXY"] = "http://127.0.0.1:10809"
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:10809"
 
 
 class GithubRepository(models.Model):
@@ -28,7 +36,7 @@ class GithubRepository(models.Model):
 
         for organization_id, repositories in url_done.items():
             if organization_id.runbot_parse_url:
-                req = requests.get(organization_id.runbot_parse_url, timeout=10)
+                req = requests.get(organization_id.runbot_parse_url, timeout=10, proxies=None)
                 runbot_list = req.content.decode().split("\n")
                 for item in runbot_list:
                     for repository in repositories:
