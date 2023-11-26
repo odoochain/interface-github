@@ -8,7 +8,6 @@ import logging
 from datetime import datetime
 import time
 from urllib.request import urlopen as _urlopen
-from github import Github,Auth
 from github.GithubException import UnknownObjectException
 
 from odoo import _, api, fields, models, tools
@@ -17,7 +16,7 @@ from odoo.exceptions import UserError
 import os
 
 import pytz
-
+from github import Auth, Github
 # https://github.com/xxtg666/XTBot-Core/blob/main/plugins/xtbotaidraw/gh_utils.py
 
 os.environ["HTTP_PROXY"] = "http://127.0.0.1:10809"
