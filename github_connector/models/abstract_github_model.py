@@ -15,6 +15,9 @@ from odoo import _, api, fields, models, tools
 from odoo.addons.github_connector.models._urlopen import urlopen
 from odoo.exceptions import UserError
 import os
+
+import pytz
+
 # https://github.com/xxtg666/XTBot-Core/blob/main/plugins/xtbotaidraw/gh_utils.py
 
 os.environ["HTTP_PROXY"] = "http://127.0.0.1:10809"
@@ -91,8 +94,13 @@ class AbstractGithubModel(models.AbstractModel):
 
     def process_timezone_fields(self, res):
         for k, v in res.items():
-            if self._fields[k].type == "datetime" and isinstance(v, str):
-                res[k] = datetime.strptime(v, "%Y-%m-%dT%H:%M:%SZ")
+            # if self._fields[k].type == "datetime" and isinstance(v, str):
+            #     res[k] = datetime.strptime(v, "%Y-%m-%dT%H:%M:%SZ")
+            if self._fields[k].type == "datetime":
+                if isinstance(v, str):
+                    res[k] = datetime.strptime(v, "%Y-%m-%dT%H:%M:%SZ")
+                elif isinstance(v, datetime) and v.tzinfo:
+                    res[k] = v.astimezone(pytz.utc).replace(tzinfo=None)
 
     @api.model
     def get_odoo_data_from_github(self, data):
