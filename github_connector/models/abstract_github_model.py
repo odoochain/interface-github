@@ -8,15 +8,17 @@ import logging
 from datetime import datetime
 import time
 from urllib.request import urlopen as _urlopen
-from github.GithubException import UnknownObjectException
-
+import pytz
+from github import Auth, Github  # pylint: disable=missing-manifest-dependency
+from github.GithubException import (  # pylint: disable=missing-manifest-dependency
+    UnknownObjectException,
+)
 from odoo import _, api, fields, models, tools
 from odoo.addons.github_connector.models._urlopen import urlopen
 from odoo.exceptions import UserError
 import os
 
-import pytz
-from github import Auth, Github
+
 # https://github.com/xxtg666/XTBot-Core/blob/main/plugins/xtbotaidraw/gh_utils.py
 
 os.environ["HTTP_PROXY"] = "http://127.0.0.1:10809"
