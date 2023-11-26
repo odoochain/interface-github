@@ -2,3 +2,10 @@
 GitPython
 pathspec
 PyGithub
+# generated from manifests external_dependencies
+GitPython
+pathspec
+PyGithub
+pygount
+
+sudo apt install cloc
